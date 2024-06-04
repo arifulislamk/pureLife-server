@@ -34,6 +34,12 @@ async function run() {
             const result = await campsCollection.find().toArray()
             res.send(result)
         })
+        app.get('/campsSix', async (req, res) => {
+            const filter = {}
+            const options = { sort: { participantCount: -1 } }
+            const result = await campsCollection.find(filter, options).limit(6).toArray()
+            res.send(result)
+        })
         app.get('/camps/:id', async (req, res) => {
             const id = req.params.id
             console.log(id)
@@ -43,14 +49,14 @@ async function run() {
         })
 
         app.patch('/updateParticipants', async (req, res) => {
-            const { participantCount } = req.body 
+            const { participantCount } = req.body
             // const convertedParticipant = parseFloat(participantCount)
             const updateDoc = {
                 $set: {
                     participantCount: participantCount + 1
                 }
             }
-            const result = await campsCollection.updateOne( {}, updateDoc)
+            const result = await campsCollection.updateOne({}, updateDoc)
             res.send(result)
         })
 
