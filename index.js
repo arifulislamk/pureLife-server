@@ -21,13 +21,14 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
-console.log(process.env.DB_PASS)
-console.log(process.env.DB_USER)
+
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         const campsCollection = client.db('pureLife-health').collection("camps")
+        const participantsCollection = client.db('pureLife-health').collection("participants")
 
         app.get('/camps', async (req, res) => {
             const result = await campsCollection.find().toArray()
@@ -38,6 +39,25 @@ async function run() {
             console.log(id)
             const query = { _id: new ObjectId(id) }
             const result = await campsCollection.findOne(query)
+            res.send(result)
+        })
+
+        app.patch('/updateParticipants', async (req, res) => {
+            const { participantCount } = req.body 
+            // const convertedParticipant = parseFloat(participantCount)
+            const updateDoc = {
+                $set: {
+                    participantCount: participantCount + 1
+                }
+            }
+            const result = await campsCollection.updateOne( {}, updateDoc)
+            res.send(result)
+        })
+
+        // participantscollection  api 
+        app.post('/participant', async (req, res) => {
+            const newParticipant = req.body
+            const result = await participantsCollection.insertOne(newParticipant)
             res.send(result)
         })
         // Send a ping to confirm a successful connection
