@@ -84,7 +84,7 @@ async function run() {
             let options = {}
             if (participant) options = { sort: { participantCount: participant === 'asc' ? 1 : -1 } }
             if (date) options = { sort: { dateAndTime: date === 'asc' ? 1 : -1 } }
-            
+
             const result = await campsCollection.find(filter, options).toArray()
             res.send(result)
         })
@@ -102,9 +102,23 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/camps/user/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await campsCollection.find(query).toArray()
+            res.send(result)
+        })
+
         app.post('/camps', async (req, res) => {
             const camps = req.body
             const result = await campsCollection.insertOne(camps)
+            res.send(result)
+        })
+
+        app.delete('/camps/delete/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await campsCollection.deleteOne(query)
             res.send(result)
         })
 
