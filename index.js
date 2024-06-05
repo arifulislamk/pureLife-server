@@ -48,15 +48,24 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/updateParticipants', async (req, res) => {
+        app.post('/camps', async (req, res) => {
+            const camps = req.body
+            const result = await campsCollection.insertOne(camps)
+            res.send(result)
+        })
+        
+        app.patch('/camps/participants/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
             const { participantCount } = req.body
-            // const convertedParticipant = parseFloat(participantCount)
+            const convertedParticipant = parseFloat(participantCount)
+            console.log(convertedParticipant)
             const updateDoc = {
                 $set: {
-                    participantCount: participantCount + 1
+                    participantCount: convertedParticipant + 1
                 }
             }
-            const result = await campsCollection.updateOne({}, updateDoc)
+            const result = await campsCollection.updateOne(filter, updateDoc)
             res.send(result)
         })
 
