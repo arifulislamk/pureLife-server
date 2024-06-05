@@ -70,7 +70,22 @@ async function run() {
         })
         // campsCollection api 
         app.get('/camps', async (req, res) => {
-            const result = await campsCollection.find().toArray()
+            const search = req.query.search;
+            const date = req.query.date;
+            const participant = req.query.participant;
+            const filter = {
+                $or: [
+                    { campName: { $regex: search, $options: 'i' } },
+                    { location: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                    { healthcareProfessional: { $regex: search, $options: 'i' } },
+                ]
+            }
+            let options = {}
+            if (participant) options = { sort: { participantCount: participant === 'asc' ? 1 : -1 } }
+            if (date) options = { sort: { dateAndTime: date === 'asc' ? 1 : -1 } }
+            
+            const result = await campsCollection.find(filter, options).toArray()
             res.send(result)
         })
         app.get('/campsSix', async (req, res) => {
