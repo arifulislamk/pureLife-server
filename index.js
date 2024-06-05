@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser')
 require('dotenv').config()
@@ -6,7 +7,12 @@ const cors = require('cors');
 const app = express()
 const port = process.env.PORT || 5000;
 
-app.use(cors())
+const corsOptions = {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+    optionSuccessStatus: 200,
+}
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -30,6 +36,39 @@ async function run() {
         const campsCollection = client.db('pureLife-health').collection("camps")
         const participantsCollection = client.db('pureLife-health').collection("participants")
 
+        // jwt token 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '365d',
+            })
+
+            console.log(user)
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                })
+                .send({ success: true })
+        })
+
+        // Logout
+        app.get('/logout', async (req, res) => {
+            try {
+                res
+                    .clearCookie('token', {
+                        maxAge: 0,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                    })
+                    .send({ success: true })
+                console.log('Logout successful')
+            } catch (err) {
+                res.status(500).send(err)
+            }
+        })
+        // campsCollection api 
         app.get('/camps', async (req, res) => {
             const result = await campsCollection.find().toArray()
             res.send(result)
@@ -53,7 +92,7 @@ async function run() {
             const result = await campsCollection.insertOne(camps)
             res.send(result)
         })
-        
+
         app.patch('/camps/participants/:id', async (req, res) => {
             const id = req.params.id
             const filter = { _id: new ObjectId(id) }
