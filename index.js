@@ -104,7 +104,7 @@ async function run() {
 
         app.get('/camps/user/:email', async (req, res) => {
             const email = req.params.email
-            const query = { email: email }
+            const query = { organizerEmail: email }
             const result = await campsCollection.find(query).toArray()
             res.send(result)
         })
@@ -141,6 +141,26 @@ async function run() {
         app.post('/participant', async (req, res) => {
             const newParticipant = req.body
             const result = await participantsCollection.insertOne(newParticipant)
+            res.send(result)
+        })
+        app.get('/participant/:email', async (req, res) => {
+            const email = req.params.email
+            console.log(email, 'from participant')
+            const filter = { organizerEmail: email }
+            const result = await participantsCollection.find(filter).toArray()
+            res.send(result)
+        })
+        app.get('/participant/user/:email', async (req, res) => {
+            const email = req.params.email
+            console.log(email, 'from participant user')
+            const filter = { participantEmail: email }
+            const result = await participantsCollection.find(filter).toArray()
+            res.send(result)
+        })
+        app.delete('/participant/delete/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await participantsCollection.deleteOne(query)
             res.send(result)
         })
         // Send a ping to confirm a successful connection
