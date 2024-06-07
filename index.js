@@ -7,7 +7,13 @@ const app = express()
 const port = process.env.PORT || 5000;
 
 
-app.use(cors())
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://purelife-health.web.app",
+        "https://purelife-health.firebaseapp.com",
+    ]
+}))
 app.use(express.json())
 
 
@@ -30,6 +36,7 @@ async function run() {
         const campsCollection = client.db('pureLife-health').collection("camps")
         const participantsCollection = client.db('pureLife-health').collection("participants")
         const usersCollection = client.db('pureLife-health').collection("users")
+        const doctorsCollection = client.db('pureLife-health').collection("doctors")
 
         // jwt token 
         app.post('/jwt', async (req, res) => {
@@ -146,7 +153,7 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/camps/participants/:id',  async (req, res) => {
+        app.patch('/camps/participants/:id', async (req, res) => {
             const id = req.params.id
             const filter = { _id: new ObjectId(id) }
             const { participantCount } = req.body
@@ -155,6 +162,18 @@ async function run() {
             const updateDoc = {
                 $set: {
                     participantCount: convertedParticipant + 1
+                }
+            }
+            const result = await campsCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+        app.patch('/camps/update/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+            const newCamps = req.body
+            const updateDoc = {
+                $set: {
+                    ...newCamps
                 }
             }
             const result = await campsCollection.updateOne(filter, updateDoc)
@@ -174,7 +193,7 @@ async function run() {
             const result = await participantsCollection.find(filter).toArray()
             res.send(result)
         })
-        app.get('/participant/user/:email',verifyToken, async (req, res) => {
+        app.get('/participant/user/:email', verifyToken, async (req, res) => {
             const email = req.params.email
             console.log(email, 'from participant user')
             const filter = { participantEmail: email }
@@ -185,6 +204,12 @@ async function run() {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await participantsCollection.deleteOne(query)
+            res.send(result)
+        })
+
+        // doctors api 
+        app.get('/doctors', async (req, res) => {
+            const result = await doctorsCollection.find().toArray()
             res.send(result)
         })
         // Send a ping to confirm a successful connection
