@@ -29,6 +29,7 @@ async function run() {
         // await client.connect();
         const campsCollection = client.db('pureLife-health').collection("camps")
         const participantsCollection = client.db('pureLife-health').collection("participants")
+        const usersCollection = client.db('pureLife-health').collection("users")
 
         // jwt token 
         app.post('/jwt', async (req, res) => {
@@ -38,7 +39,39 @@ async function run() {
             })
 
             console.log(user)
-            res.send({token})
+            res.send({ token })
+        })
+
+        // verify Token 
+        const verifyToken = (req, res, next) => {
+            console.log('from verify ajke', req.headers.authorization)
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
+
+            const token = req.headers.authorization.split(' ')[1]
+            console.log(token, 'split korle pai')
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'unauthorized access' })
+                }
+                req.decoded = decoded;
+                next()
+            })
+            // next()
+        }
+
+        // user collection api 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            
+            const existingUser = await usersCollection.findOne(query)
+            if (existingUser) {
+                return res.send({ message: 'user already exist', insertedId: null })
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result)
         })
         // campsCollection api 
         app.get('/camps', async (req, res) => {
@@ -66,7 +99,7 @@ async function run() {
             const result = await campsCollection.find(filter, options).limit(6).toArray()
             res.send(result)
         })
-        app.get('/camps/:id', async (req, res) => {
+        app.get('/camps/:id', verifyToken, async (req, res) => {
             const id = req.params.id
             console.log(id)
             const query = { _id: new ObjectId(id) }
