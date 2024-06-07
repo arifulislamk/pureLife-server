@@ -61,11 +61,30 @@ async function run() {
             // next()
         }
 
+        // verify organizer 
+        const verifyOrganizer = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+            const isOrganizer = user?.role === 'organizer'
+            if (!isOrganizer) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next()
+        }
+
         // user collection api 
+
+        //get a loogged user by email
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await usersCollection.findOne({ email })
+            res.send(result)
+        })
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
-            
+
             const existingUser = await usersCollection.findOne(query)
             if (existingUser) {
                 return res.send({ message: 'user already exist', insertedId: null })
@@ -107,27 +126,27 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/camps/user/:email', async (req, res) => {
+        app.get('/camps/user/:email', verifyToken, async (req, res) => {
             const email = req.params.email
             const query = { organizerEmail: email }
             const result = await campsCollection.find(query).toArray()
             res.send(result)
         })
 
-        app.post('/camps', async (req, res) => {
+        app.post('/camps', verifyToken, verifyOrganizer, async (req, res) => {
             const camps = req.body
             const result = await campsCollection.insertOne(camps)
             res.send(result)
         })
 
-        app.delete('/camps/delete/:id', async (req, res) => {
+        app.delete('/camps/delete/:id', verifyToken, verifyOrganizer, async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await campsCollection.deleteOne(query)
             res.send(result)
         })
 
-        app.patch('/camps/participants/:id', async (req, res) => {
+        app.patch('/camps/participants/:id',  async (req, res) => {
             const id = req.params.id
             const filter = { _id: new ObjectId(id) }
             const { participantCount } = req.body
@@ -148,21 +167,21 @@ async function run() {
             const result = await participantsCollection.insertOne(newParticipant)
             res.send(result)
         })
-        app.get('/participant/:email', async (req, res) => {
+        app.get('/participant/:email', verifyToken, async (req, res) => {
             const email = req.params.email
             console.log(email, 'from participant')
             const filter = { organizerEmail: email }
             const result = await participantsCollection.find(filter).toArray()
             res.send(result)
         })
-        app.get('/participant/user/:email', async (req, res) => {
+        app.get('/participant/user/:email',verifyToken, async (req, res) => {
             const email = req.params.email
             console.log(email, 'from participant user')
             const filter = { participantEmail: email }
             const result = await participantsCollection.find(filter).toArray()
             res.send(result)
         })
-        app.delete('/participant/delete/:id', async (req, res) => {
+        app.delete('/participant/delete/:id', verifyToken, verifyOrganizer, async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await participantsCollection.deleteOne(query)
