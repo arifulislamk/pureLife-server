@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const cors = require('cors');
 const app = express()
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 
@@ -80,8 +81,23 @@ async function run() {
             next()
         }
 
-        // user collection api 
+        // payment releted api 
+        app.post('/create-payment-intent', verifyToken, async (req, res) => {
+            const campFees = req.body.campFees
+            const pricecInCent = parseFloat(campFees) * 100
 
+            const { client_secret } = await stripe.paymentIntents.create({
+                amount: pricecInCent,
+                currency: "usd",
+                // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            })
+
+            res.send({ clientSecret: client_secret })
+        })
+        // user collection api 
         //get a loogged user by email
         app.get('/user/:email', async (req, res) => {
             const email = req.params.email;
