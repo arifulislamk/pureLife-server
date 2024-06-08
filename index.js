@@ -222,6 +222,27 @@ async function run() {
             const result = await participantsCollection.deleteOne(query)
             res.send(result)
         })
+        app.patch('/participant/status/:id', async (req, res) => {
+            const id = req.params.id
+            const status = req.body.status
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: { status: status },
+            }
+            const result = await participantsCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
+        app.patch('/participant/confirm/:id', async (req, res) => {
+            const id = req.params.id
+            const confirmation = req.body.confirmation
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: { confirmation: confirmation },
+            }
+            const result = await participantsCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
+
 
         // doctors api 
         app.get('/doctors', async (req, res) => {
