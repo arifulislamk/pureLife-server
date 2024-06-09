@@ -39,6 +39,7 @@ async function run() {
         const usersCollection = client.db('pureLife-health').collection("users")
         const doctorsCollection = client.db('pureLife-health').collection("doctors")
         const paymentsCollection = client.db('pureLife-health').collection("payments")
+        const feedbacksCollection = client.db('pureLife-health').collection("feedbacks")
 
         // jwt token 
         app.post('/jwt', async (req, res) => {
@@ -260,6 +261,17 @@ async function run() {
         // doctors api 
         app.get('/doctors', async (req, res) => {
             const result = await doctorsCollection.find().toArray()
+            res.send(result)
+        })
+
+        // feedback api 
+        app.post('/feedback', verifyToken, async (req, res) => {
+            const feedback = req.body
+            const result = await feedbacksCollection.insertOne(feedback)
+            res.send(result)
+        })
+        app.get('/feedback', async (req, res) => {
+            const result = await feedbacksCollection.find().toArray()
             res.send(result)
         })
         // Send a ping to confirm a successful connection
