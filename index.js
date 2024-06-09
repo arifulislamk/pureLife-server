@@ -38,6 +38,7 @@ async function run() {
         const participantsCollection = client.db('pureLife-health').collection("participants")
         const usersCollection = client.db('pureLife-health').collection("users")
         const doctorsCollection = client.db('pureLife-health').collection("doctors")
+        const paymentsCollection = client.db('pureLife-health').collection("payments")
 
         // jwt token 
         app.post('/jwt', async (req, res) => {
@@ -96,6 +97,18 @@ async function run() {
             })
 
             res.send({ clientSecret: client_secret })
+        })
+
+        app.post('/paymentInfo', async (req, res) => {
+            const paymentInfo = req.body
+            const result = await paymentsCollection.insertOne(paymentInfo)
+            res.send(result)
+        })
+        app.get('/paymentinfo/user/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { userEmail: email }
+            const result = await paymentsCollection.find(query).toArray()
+            res.send(result)
         })
         // user collection api 
         //get a loogged user by email
