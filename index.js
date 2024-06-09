@@ -129,6 +129,19 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result)
         })
+
+        app.patch('/user/update/:email', async (req, res) => {
+            const email = req.params.email
+            const filter = { email: email }
+            const newUser = req.body
+            const updateDoc = {
+                $set: {
+                    ...newUser
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
         // campsCollection api 
         app.get('/camps', async (req, res) => {
             const search = req.query.search;
@@ -230,7 +243,7 @@ async function run() {
             const result = await participantsCollection.find(filter).toArray()
             res.send(result)
         })
-        app.delete('/participant/delete/:id', verifyToken,  async (req, res) => {
+        app.delete('/participant/delete/:id', verifyToken, async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await participantsCollection.deleteOne(query)
