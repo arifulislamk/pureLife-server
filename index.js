@@ -230,7 +230,7 @@ async function run() {
             const result = await participantsCollection.find(filter).toArray()
             res.send(result)
         })
-        app.delete('/participant/delete/:id', verifyToken, verifyOrganizer, async (req, res) => {
+        app.delete('/participant/delete/:id', verifyToken,  async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await participantsCollection.deleteOne(query)
